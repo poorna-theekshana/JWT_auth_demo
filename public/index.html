@@ -1,0 +1,91 @@
+<!-- public/index.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JWT Auth App</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Login to Access Dashboard</h1>
+      <form id="loginForm">
+        <div class="input-group">
+          <label for="username">Username:</label>
+          <input type="text" id="username" name="username" required />
+        </div>
+        <div class="input-group">
+          <label for="password">Password:</label>
+          <input type="password" id="password" name="password" required />
+        </div>
+        <button type="submit" class="login-btn">Login</button>
+      </form>
+      <button onclick="accessDashboard()" class="dashboard-btn">
+        Access Dashboard
+      </button>
+      <button onclick="logout()" class="logout-btn">Logout</button>
+      <h2 id="tokenDisplay"></h2>
+    </div>
+
+    <script>
+      document
+        .getElementById('loginForm')
+        .addEventListener('submit', async function (e) {
+          e.preventDefault();
+          const username = document.getElementById('username').value;
+          const password = document.getElementById('password').value;
+
+          const response = await fetch('/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ username, password }),
+          });
+
+          const data = await response.json();
+          if (response.ok) {
+            document.getElementById(
+              'tokenDisplay'
+            ).textContent = `JWT Token: ${data.token}`;
+            localStorage.setItem('token', data.token);
+          } else {
+            document.getElementById(
+              'tokenDisplay'
+            ).textContent = `Error: ${data.message}`;
+          }
+        });
+
+      async function accessDashboard() {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          alert('Please login first');
+          return;
+        }
+
+        const response = await fetch('/dashboard', {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+          alert(data.message);
+        } else {
+          alert('Error: ' + data.message);
+        }
+      }
+
+      function logout() {
+        localStorage.removeItem('token');
+        document.getElementById('tokenDisplay').textContent =
+          'Logged out successfully';
+        alert('Logged out');
+      }
+    </script>
+  </body>
+</html>
